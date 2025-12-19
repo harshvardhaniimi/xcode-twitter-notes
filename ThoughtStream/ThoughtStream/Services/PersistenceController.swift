@@ -1,4 +1,5 @@
 import CoreData
+import CloudKit
 
 struct PersistenceController {
     static let shared = PersistenceController()
@@ -6,13 +7,17 @@ struct PersistenceController {
     // App Group identifier - must match the one in entitlements
     static let appGroupIdentifier = "group.com.thoughtstream.app"
 
-    let container: NSPersistentContainer
+    // CloudKit container identifier
+    static let cloudKitContainerIdentifier = "iCloud.com.thoughtstream.app"
+
+    let container: NSPersistentCloudKitContainer
 
     init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "ThoughtStream")
+        container = NSPersistentCloudKitContainer(name: "ThoughtStream")
 
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            container.persistentStoreDescriptions.first?.cloudKitContainerOptions = nil
         } else {
             // Use App Group shared container for data sharing with extensions
             if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: PersistenceController.appGroupIdentifier) {
@@ -20,6 +25,17 @@ struct PersistenceController {
                 let description = NSPersistentStoreDescription(url: storeURL)
                 description.shouldMigrateStoreAutomatically = true
                 description.shouldInferMappingModelAutomatically = true
+
+                // Enable CloudKit sync
+                let cloudKitOptions = NSPersistentCloudKitContainerOptions(
+                    containerIdentifier: PersistenceController.cloudKitContainerIdentifier
+                )
+                description.cloudKitContainerOptions = cloudKitOptions
+
+                // Enable history tracking for CloudKit sync
+                description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+                description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
                 container.persistentStoreDescriptions = [description]
             }
         }
@@ -33,6 +49,21 @@ struct PersistenceController {
 
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+
+        // Enable automatic syncing from remote changes
+        container.viewContext.name = "viewContext"
+
+        // Listen for remote store changes
+        NotificationCenter.default.addObserver(
+            forName: .NSPersistentStoreRemoteChange,
+            object: container.persistentStoreCoordinator,
+            queue: .main
+        ) { _ in
+            // Merge changes from CloudKit
+            container.viewContext.perform {
+                container.viewContext.refreshAllObjects()
+            }
+        }
     }
 
     // Preview helper

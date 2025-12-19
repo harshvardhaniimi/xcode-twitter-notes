@@ -2,9 +2,11 @@ import UIKit
 import Social
 import UniformTypeIdentifiers
 import CoreData
+import CloudKit
 
 class ShareViewController: UIViewController {
     private var sharedItems: [SharedItem] = []
+    private var addedURLs: Set<String> = [] // Track URLs to prevent duplicates
     private let textView = UITextView()
     private let stackView = UIStackView()
     private let previewStackView = UIStackView()
@@ -28,13 +30,24 @@ class ShareViewController: UIViewController {
     }
 
     private func setupCoreData() {
-        // Set up Core Data with App Group for shared container
-        let container = NSPersistentContainer(name: "ThoughtStream")
+        // Set up Core Data with App Group for shared container and CloudKit sync
+        let container = NSPersistentCloudKitContainer(name: "ThoughtStream")
 
         // Use App Group shared container
         if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.thoughtstream.app") {
             let storeURL = appGroupURL.appendingPathComponent("ThoughtStream.sqlite")
             let description = NSPersistentStoreDescription(url: storeURL)
+
+            // Enable CloudKit sync
+            let cloudKitOptions = NSPersistentCloudKitContainerOptions(
+                containerIdentifier: "iCloud.com.thoughtstream.app"
+            )
+            description.cloudKitContainerOptions = cloudKitOptions
+
+            // Enable history tracking for CloudKit sync
+            description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
             container.persistentStoreDescriptions = [description]
         }
 
@@ -43,6 +56,9 @@ class ShareViewController: UIViewController {
                 print("Core Data error: \(error)")
             }
         }
+
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         viewContext = container.viewContext
     }
 
@@ -109,9 +125,14 @@ class ShareViewController: UIViewController {
                     group.enter()
                     attachment.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { [weak self] item, _ in
                         if let url = item as? URL {
+                            let urlString = url.absoluteString
                             DispatchQueue.main.async {
-                                self?.sharedItems.append(SharedItem(type: .url(url)))
-                                self?.addURLPreview(url)
+                                // Only add if we haven't seen this URL before
+                                if self?.addedURLs.contains(urlString) == false {
+                                    self?.addedURLs.insert(urlString)
+                                    self?.sharedItems.append(SharedItem(type: .url(url)))
+                                    self?.addURLPreview(url)
+                                }
                             }
                         }
                         group.leave()
@@ -123,8 +144,15 @@ class ShareViewController: UIViewController {
                     attachment.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { [weak self] item, _ in
                         if let text = item as? String {
                             DispatchQueue.main.async {
-                                self?.sharedItems.append(SharedItem(type: .text(text)))
-                                self?.textView.text = text
+                                // Check if this text is a URL that we've already captured
+                                if let url = URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines)),
+                                   (url.scheme == "http" || url.scheme == "https"),
+                                   self?.addedURLs.contains(url.absoluteString) == true {
+                                    // Skip - this URL was already added
+                                } else {
+                                    self?.sharedItems.append(SharedItem(type: .text(text)))
+                                    self?.textView.text = text
+                                }
                             }
                         }
                         group.leave()
@@ -215,24 +243,31 @@ class ShareViewController: UIViewController {
 
         // Add attachments
         for item in sharedItems {
-            let attachment = NSEntityDescription.insertNewObject(forEntityName: "Attachment", into: context)
-            attachment.setValue(UUID(), forKey: "id")
-            attachment.setValue(Date(), forKey: "createdAt")
-            attachment.setValue(note, forKey: "note")
-
             switch item.type {
             case .text(let text):
-                // Text is already in the note content
+                // Text goes into note content, not as an attachment
                 if textView.text.isEmpty {
                     note.setValue(text, forKey: "content")
                 }
             case .url(let url):
+                let attachment = NSEntityDescription.insertNewObject(forEntityName: "Attachment", into: context)
+                attachment.setValue(UUID(), forKey: "id")
+                attachment.setValue(Date(), forKey: "createdAt")
+                attachment.setValue(note, forKey: "note")
                 attachment.setValue("link", forKey: "type")
                 attachment.setValue(url.absoluteString, forKey: "linkURL")
             case .image(let image):
+                let attachment = NSEntityDescription.insertNewObject(forEntityName: "Attachment", into: context)
+                attachment.setValue(UUID(), forKey: "id")
+                attachment.setValue(Date(), forKey: "createdAt")
+                attachment.setValue(note, forKey: "note")
                 attachment.setValue("image", forKey: "type")
                 attachment.setValue(image.jpegData(compressionQuality: 0.8), forKey: "data")
             case .data(let data, let filename):
+                let attachment = NSEntityDescription.insertNewObject(forEntityName: "Attachment", into: context)
+                attachment.setValue(UUID(), forKey: "id")
+                attachment.setValue(Date(), forKey: "createdAt")
+                attachment.setValue(note, forKey: "note")
                 attachment.setValue("pdf", forKey: "type")
                 attachment.setValue(data, forKey: "data")
                 attachment.setValue(filename, forKey: "fileName")
