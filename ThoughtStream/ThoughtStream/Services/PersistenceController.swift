@@ -3,6 +3,9 @@ import CoreData
 struct PersistenceController {
     static let shared = PersistenceController()
 
+    // App Group identifier - must match the one in entitlements
+    static let appGroupIdentifier = "group.com.thoughtstream.app"
+
     let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {
@@ -10,11 +13,21 @@ struct PersistenceController {
 
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+        } else {
+            // Use App Group shared container for data sharing with extensions
+            if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: PersistenceController.appGroupIdentifier) {
+                let storeURL = appGroupURL.appendingPathComponent("ThoughtStream.sqlite")
+                let description = NSPersistentStoreDescription(url: storeURL)
+                description.shouldMigrateStoreAutomatically = true
+                description.shouldInferMappingModelAutomatically = true
+                container.persistentStoreDescriptions = [description]
+            }
         }
 
         container.loadPersistentStores { (storeDescription, error) in
             if let error = error as NSError? {
-                fatalError("Unresolved error \(error), \(error.userInfo)")
+                // In production, handle this more gracefully
+                print("Core Data error: \(error), \(error.userInfo)")
             }
         }
 
