@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
+import AVFoundation
 
 struct CreateNoteView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -10,17 +11,30 @@ struct CreateNoteView: View {
     @State private var selectedImages: [UIImage] = []
     @State private var selectedPDFs: [PDFData] = []
     @State private var links: [String] = []
+    @State private var audioRecordings: [AudioData] = []
     @State private var newLinkText = ""
     @State private var showingImagePicker = false
     @State private var showingFilePicker = false
     @State private var showingLinkInput = false
     @State private var isProcessingOCR = false
+    @State private var isRecording = false
+    @State private var audioRecorder: AVAudioRecorder?
+    @State private var recordingURL: URL?
+    @State private var recordingDuration: TimeInterval = 0
+    @State private var recordingTimer: Timer?
 
     @State private var photosPickerItems: [PhotosPickerItem] = []
 
     struct PDFData: Identifiable {
         let id = UUID()
         let data: Data
+        let fileName: String
+    }
+
+    struct AudioData: Identifiable {
+        let id = UUID()
+        let data: Data
+        let duration: TimeInterval
         let fileName: String
     }
 
@@ -44,6 +58,8 @@ struct CreateNoteView: View {
                             TextField("What's on your mind?", text: $noteContent, axis: .vertical)
                                 .font(.body)
                                 .lineLimit(1...20)
+                                .autocorrectionDisabled(false)
+                                .textInputAutocapitalization(.sentences)
                         }
                         .padding(.horizontal, 16)
                         .padding(.top, 16)
@@ -75,6 +91,53 @@ struct CreateNoteView: View {
                                 }
                                 .padding(.horizontal, 16)
                             }
+                        }
+
+                        // Audio recordings preview
+                        if !audioRecordings.isEmpty {
+                            VStack(spacing: 8) {
+                                ForEach(audioRecordings) { audio in
+                                    HStack {
+                                        Image(systemName: "waveform")
+                                            .foregroundColor(.purple)
+                                        Text(formatDuration(audio.duration))
+                                            .font(.subheadline)
+                                        Spacer()
+                                        Button(action: {
+                                            audioRecordings.removeAll { $0.id == audio.id }
+                                        }) {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    .padding(12)
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(8)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                        }
+
+                        // Recording indicator
+                        if isRecording {
+                            HStack {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 12, height: 12)
+                                Text("Recording: \(formatDuration(recordingDuration))")
+                                    .font(.subheadline)
+                                    .foregroundColor(.red)
+                                Spacer()
+                                Button("Stop") {
+                                    stopRecording()
+                                }
+                                .foregroundColor(.red)
+                                .fontWeight(.semibold)
+                            }
+                            .padding(12)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(8)
+                            .padding(.horizontal, 16)
                         }
 
                         // Selected PDFs preview
@@ -134,7 +197,8 @@ struct CreateNoteView: View {
                             HStack {
                                 TextField("Enter URL", text: $newLinkText)
                                     .textFieldStyle(.roundedBorder)
-                                    .autocapitalization(.none)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled(true)
                                     .keyboardType(.URL)
 
                                 Button("Add") {
@@ -183,6 +247,19 @@ struct CreateNoteView: View {
                             .foregroundColor(showingLinkInput ? .blue : .blue.opacity(0.7))
                     }
 
+                    // Audio recording button
+                    Button(action: {
+                        if isRecording {
+                            stopRecording()
+                        } else {
+                            startRecording()
+                        }
+                    }) {
+                        Image(systemName: isRecording ? "stop.circle.fill" : "mic.fill")
+                            .font(.title3)
+                            .foregroundColor(isRecording ? .red : .blue)
+                    }
+
                     Spacer()
 
                     if isProcessingOCR {
@@ -207,7 +284,7 @@ struct CreateNoteView: View {
                         saveNote()
                     }
                     .fontWeight(.semibold)
-                    .disabled(noteContent.isEmpty && selectedImages.isEmpty && selectedPDFs.isEmpty && links.isEmpty)
+                    .disabled(noteContent.isEmpty && selectedImages.isEmpty && selectedPDFs.isEmpty && links.isEmpty && audioRecordings.isEmpty)
                 }
             }
             .fileImporter(
@@ -218,6 +295,64 @@ struct CreateNoteView: View {
                 handlePDFSelection(result)
             }
         }
+        .onDisappear {
+            // Clean up recording if view is dismissed
+            if isRecording {
+                audioRecorder?.stop()
+            }
+        }
+    }
+
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    private func startRecording() {
+        let audioSession = AVAudioSession.sharedInstance()
+
+        do {
+            try audioSession.setCategory(.playAndRecord, mode: .default)
+            try audioSession.setActive(true)
+
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let audioFilename = documentsPath.appendingPathComponent("recording_\(UUID().uuidString).m4a")
+
+            let settings: [String: Any] = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 44100,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+
+            audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
+            audioRecorder?.record()
+            recordingURL = audioFilename
+            isRecording = true
+            recordingDuration = 0
+
+            // Start timer to update duration
+            recordingTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                recordingDuration += 1
+            }
+        } catch {
+            print("Failed to start recording: \(error)")
+        }
+    }
+
+    private func stopRecording() {
+        audioRecorder?.stop()
+        recordingTimer?.invalidate()
+        recordingTimer = nil
+        isRecording = false
+
+        if let url = recordingURL, let data = try? Data(contentsOf: url) {
+            let audio = AudioData(data: data, duration: recordingDuration, fileName: url.lastPathComponent)
+            audioRecordings.append(audio)
+        }
+
+        recordingURL = nil
     }
 
     private func loadImages(from items: [PhotosPickerItem]) async {
@@ -314,6 +449,23 @@ struct CreateNoteView: View {
                 attachment.linkURL = link
                 attachment.createdAt = Date()
                 attachment.note = note
+            }
+
+            // Save audio recordings with speech-to-text
+            for audio in audioRecordings {
+                let attachment = Attachment(context: viewContext)
+                attachment.id = UUID()
+                attachment.type = "audio"
+                attachment.data = audio.data
+                attachment.fileName = audio.fileName
+                attachment.createdAt = Date()
+                attachment.note = note
+
+                // Perform speech-to-text on audio
+                if let transcription = await SpeechService.shared.transcribe(audioData: audio.data) {
+                    attachment.extractedText = transcription
+                    allExtractedText.append(transcription)
+                }
             }
 
             // Store all extracted text in the note for easier searching

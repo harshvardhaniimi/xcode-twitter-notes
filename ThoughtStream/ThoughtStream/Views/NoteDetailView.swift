@@ -1,5 +1,6 @@
 import SwiftUI
 import QuickLook
+import AVFoundation
 
 struct NoteDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -28,6 +29,10 @@ struct NoteDetailView: View {
 
     private var linkAttachments: [Attachment] {
         sortedAttachments.filter { $0.type == "link" }
+    }
+
+    private var audioAttachments: [Attachment] {
+        sortedAttachments.filter { $0.type == "audio" }
     }
 
     var body: some View {
@@ -64,6 +69,8 @@ struct NoteDetailView: View {
                         TextField("Your thought...", text: $editedContent, axis: .vertical)
                             .font(.body)
                             .padding(.horizontal, 16)
+                            .autocorrectionDisabled(false)
+                            .textInputAutocapitalization(.sentences)
                     } else {
                         if let content = note.content, !content.isEmpty {
                             Text(content)
@@ -89,7 +96,7 @@ struct NoteDetailView: View {
 
                                     // Show extracted text if available
                                     if let extractedText = attachment.extractedText, !extractedText.isEmpty {
-                                        DisclosureGroup("Extracted Text") {
+                                        DisclosureGroup("Extracted Text (OCR)") {
                                             Text(extractedText)
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
@@ -98,6 +105,28 @@ struct NoteDetailView: View {
                                         .font(.caption)
                                         .foregroundColor(.blue)
                                     }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+
+                    // Audio recordings
+                    if !audioAttachments.isEmpty {
+                        VStack(spacing: 8) {
+                            ForEach(audioAttachments, id: \.id) { attachment in
+                                DetailAudioPlayerCard(attachment: attachment)
+
+                                // Show transcription if available
+                                if let transcription = attachment.extractedText, !transcription.isEmpty {
+                                    DisclosureGroup("Transcription") {
+                                        Text(transcription)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.purple)
                                 }
                             }
                         }
@@ -303,6 +332,113 @@ struct NoteDetailView: View {
         } catch {
             print("Error writing PDF: \(error)")
         }
+    }
+}
+
+struct DetailAudioPlayerCard: View {
+    let attachment: Attachment
+    @State private var isPlaying = false
+    @State private var audioPlayer: AVAudioPlayer?
+    @State private var playbackProgress: Double = 0
+    @State private var duration: TimeInterval = 0
+    @State private var timer: Timer?
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 12) {
+                Button(action: togglePlayback) {
+                    Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.largeTitle)
+                        .foregroundColor(.purple)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Voice Note")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+
+                    // Progress bar
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 4)
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color.purple)
+                                .frame(width: geometry.size.width * playbackProgress, height: 4)
+                        }
+                    }
+                    .frame(height: 4)
+
+                    // Time labels
+                    HStack {
+                        Text(formatTime(audioPlayer?.currentTime ?? 0))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text(formatTime(duration))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(12)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+        }
+        .onAppear {
+            setupAudioPlayer()
+        }
+        .onDisappear {
+            audioPlayer?.stop()
+            timer?.invalidate()
+        }
+    }
+
+    private func setupAudioPlayer() {
+        guard let data = attachment.data else { return }
+
+        do {
+            audioPlayer = try AVAudioPlayer(data: data)
+            audioPlayer?.prepareToPlay()
+            duration = audioPlayer?.duration ?? 0
+        } catch {
+            print("Failed to setup audio player: \(error)")
+        }
+    }
+
+    private func togglePlayback() {
+        if isPlaying {
+            audioPlayer?.pause()
+            timer?.invalidate()
+            isPlaying = false
+        } else {
+            audioPlayer?.play()
+            isPlaying = true
+
+            // Start timer to update progress
+            timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+                if let player = audioPlayer {
+                    playbackProgress = player.currentTime / player.duration
+
+                    if !player.isPlaying {
+                        isPlaying = false
+                        timer?.invalidate()
+                        playbackProgress = 0
+                        player.currentTime = 0
+                    }
+                }
+            }
+        }
+    }
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 
