@@ -18,7 +18,35 @@
 		A1000009228F4A1B00000009 /* CreateNoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000009228F4A1A00000009 /* CreateNoteView.swift */; };
 		A100000A228F4A1B0000000A /* NoteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000A228F4A1A0000000A /* NoteDetailView.swift */; };
 		A100000B228F4A1B0000000B /* NoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000B228F4A1A0000000B /* NoteViewModel.swift */; };
+		A100000C228F4A1B0000000C /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000C228F4A1A0000000C /* SpeechService.swift */; };
+		A100000D228F4A1B0000000D /* AppIconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000D228F4A1A0000000D /* AppIconGenerator.swift */; };
+		A1000020228F4A1B00000020 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000020228F4A1A00000020 /* ShareViewController.swift */; };
+		A1000021228F4A1B00000021 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A1000022228F4A1A00000022 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A1000030228F4A1A00000030 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000C0228F4A1A000000C0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1000040228F4A1A00000040;
+			remoteInfo = ShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A1000031228F4A1A00000031 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A1000021228F4A1B00000021 /* ShareExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		A1000000228F4A1A00000000 /* ThoughtStream.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ThoughtStream.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -33,10 +61,22 @@
 		A1000009228F4A1A00000009 /* CreateNoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateNoteView.swift; sourceTree = "<group>"; };
 		A100000A228F4A1A0000000A /* NoteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDetailView.swift; sourceTree = "<group>"; };
 		A100000B228F4A1A0000000B /* NoteViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteViewModel.swift; sourceTree = "<group>"; };
+		A100000C228F4A1A0000000C /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		A100000D228F4A1A0000000D /* AppIconGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconGenerator.swift; sourceTree = "<group>"; };
+		A1000020228F4A1A00000020 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		A1000022228F4A1A00000022 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1000023228F4A1A00000023 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000F0228F4A1A000000F0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000F1228F4A1A000000F1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -50,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000E1228F4A1A000000E1 /* ThoughtStream */,
+				A10000E6228F4A1A000000E6 /* ShareExtension */,
 				A10000E2228F4A1A000000E2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -62,6 +103,7 @@
 				A10000E3228F4A1A000000E3 /* Views */,
 				A10000E4228F4A1A000000E4 /* ViewModels */,
 				A10000E5228F4A1A000000E5 /* Services */,
+				A10000E7228F4A1A000000E7 /* Resources */,
 				A1000003228F4A1A00000003 /* Assets.xcassets */,
 				A1000004228F4A1A00000004 /* ThoughtStream.xcdatamodeld */,
 			);
@@ -72,6 +114,7 @@
 			isa = PBXGroup;
 			children = (
 				A1000000228F4A1A00000000 /* ThoughtStream.app */,
+				A1000022228F4A1A00000022 /* ShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,8 +143,26 @@
 			children = (
 				A1000005228F4A1A00000005 /* PersistenceController.swift */,
 				A1000006228F4A1A00000006 /* OCRService.swift */,
+				A100000C228F4A1A0000000C /* SpeechService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		A10000E6228F4A1A000000E6 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				A1000020228F4A1A00000020 /* ShareViewController.swift */,
+				A1000023228F4A1A00000023 /* Info.plist */,
+			);
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
+		A10000E7228F4A1A000000E7 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A100000D228F4A1A0000000D /* AppIconGenerator.swift */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -114,15 +175,34 @@
 				A10000D2228F4A1A000000D2 /* Sources */,
 				A10000F0228F4A1A000000F0 /* Frameworks */,
 				A10000D3228F4A1A000000D3 /* Resources */,
+				A1000031228F4A1A00000031 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A1000032228F4A1A00000032 /* PBXTargetDependency */,
 			);
 			name = ThoughtStream;
 			productName = ThoughtStream;
 			productReference = A1000000228F4A1A00000000 /* ThoughtStream.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A1000040228F4A1A00000040 /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000041228F4A1A00000041 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				A1000042228F4A1A00000042 /* Sources */,
+				A10000F1228F4A1A000000F1 /* Frameworks */,
+				A1000043228F4A1A00000043 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ShareExtension;
+			productName = ShareExtension;
+			productReference = A1000022228F4A1A00000022 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -135,6 +215,9 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					A10000D0228F4A1A000000D0 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					A1000040228F4A1A00000040 = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
@@ -153,6 +236,7 @@
 			projectRoot = "";
 			targets = (
 				A10000D0228F4A1A000000D0 /* ThoughtStream */,
+				A1000040228F4A1A00000040 /* ShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -163,6 +247,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000003228F4A1B00000003 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1000043228F4A1A00000043 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -178,15 +269,33 @@
 				A1000004228F4A1B00000004 /* ThoughtStream.xcdatamodeld in Sources */,
 				A1000005228F4A1B00000005 /* PersistenceController.swift in Sources */,
 				A1000006228F4A1B00000006 /* OCRService.swift in Sources */,
+				A100000C228F4A1B0000000C /* SpeechService.swift in Sources */,
 				A1000007228F4A1B00000007 /* NoteFeedView.swift in Sources */,
 				A1000008228F4A1B00000008 /* NoteCardView.swift in Sources */,
 				A1000009228F4A1B00000009 /* CreateNoteView.swift in Sources */,
 				A100000A228F4A1B0000000A /* NoteDetailView.swift in Sources */,
 				A100000B228F4A1B0000000B /* NoteViewModel.swift in Sources */,
+				A100000D228F4A1B0000000D /* AppIconGenerator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1000042228F4A1A00000042 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000020228F4A1B00000020 /* ShareViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1000032228F4A1A00000032 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1000040228F4A1A00000040 /* ShareExtension */;
+			targetProxy = A1000030228F4A1A00000030 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A10000A0228F4A1A000000A0 /* Debug */ = {
@@ -313,6 +422,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ThoughtStream/ThoughtStream.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -320,7 +430,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = ThoughtStream;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ThoughtStream needs access to your microphone to record voice notes.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "ThoughtStream needs access to your photos to attach images to your notes.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ThoughtStream needs access to speech recognition to transcribe your voice notes for search.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -344,6 +456,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ThoughtStream/ThoughtStream.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -351,7 +464,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = ThoughtStream;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "ThoughtStream needs access to your microphone to record voice notes.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "ThoughtStream needs access to your photos to attach images to your notes.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "ThoughtStream needs access to speech recognition to transcribe your voice notes for search.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -364,6 +479,56 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thoughtstream.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A10000B2228F4A1A000000B2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Add to ThoughtStream";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thoughtstream.app.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A10000B3228F4A1A000000B3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Add to ThoughtStream";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thoughtstream.app.ShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -387,6 +552,15 @@
 			buildConfigurations = (
 				A10000B0228F4A1A000000B0 /* Debug */,
 				A10000B1228F4A1A000000B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000041228F4A1A00000041 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000B2228F4A1A000000B2 /* Debug */,
+				A10000B3228F4A1A000000B3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

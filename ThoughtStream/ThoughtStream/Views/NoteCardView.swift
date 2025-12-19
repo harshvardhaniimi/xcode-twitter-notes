@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct NoteCardView: View {
     @ObservedObject var note: Note
@@ -18,6 +19,10 @@ struct NoteCardView: View {
 
     private var linkAttachments: [Attachment] {
         sortedAttachments.filter { $0.type == "link" }
+    }
+
+    private var audioAttachments: [Attachment] {
+        sortedAttachments.filter { $0.type == "audio" }
     }
 
     var body: some View {
@@ -59,6 +64,11 @@ struct NoteCardView: View {
                     // Attachments section
                     if !imageAttachments.isEmpty {
                         ImageAttachmentsGrid(attachments: imageAttachments)
+                            .padding(.top, 8)
+                    }
+
+                    if !audioAttachments.isEmpty {
+                        AudioAttachmentsView(attachments: audioAttachments)
                             .padding(.top, 8)
                     }
 
@@ -108,6 +118,101 @@ struct ImageAttachmentsGrid: View {
                 }
             }
         }
+    }
+}
+
+struct AudioAttachmentsView: View {
+    let attachments: [Attachment]
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ForEach(attachments, id: \.id) { attachment in
+                AudioPlayerCard(attachment: attachment)
+            }
+        }
+    }
+}
+
+struct AudioPlayerCard: View {
+    let attachment: Attachment
+    @State private var isPlaying = false
+    @State private var audioPlayer: AVAudioPlayer?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: togglePlayback) {
+                Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                    .font(.title)
+                    .foregroundColor(.purple)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Voice Note")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                if let transcription = attachment.extractedText, !transcription.isEmpty {
+                    Text(transcription)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                } else {
+                    Text("Audio Recording")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            // Waveform indicator
+            HStack(spacing: 2) {
+                ForEach(0..<5, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color.purple.opacity(isPlaying ? 1 : 0.3))
+                        .frame(width: 3, height: CGFloat.random(in: 8...20))
+                        .animation(isPlaying ? .easeInOut(duration: 0.3).repeatForever() : .default, value: isPlaying)
+                }
+            }
+        }
+        .padding(12)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+        .onDisappear {
+            audioPlayer?.stop()
+        }
+    }
+
+    private func togglePlayback() {
+        if isPlaying {
+            audioPlayer?.stop()
+            isPlaying = false
+        } else {
+            guard let data = attachment.data else { return }
+
+            do {
+                audioPlayer = try AVAudioPlayer(data: data)
+                audioPlayer?.delegate = AudioPlayerDelegate { [self] in
+                    isPlaying = false
+                }
+                audioPlayer?.play()
+                isPlaying = true
+            } catch {
+                print("Failed to play audio: \(error)")
+            }
+        }
+    }
+}
+
+class AudioPlayerDelegate: NSObject, AVAudioPlayerDelegate {
+    let onFinish: () -> Void
+
+    init(onFinish: @escaping () -> Void) {
+        self.onFinish = onFinish
+    }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        onFinish()
     }
 }
 
